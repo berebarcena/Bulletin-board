@@ -1,0 +1,17 @@
+{
+  "name": "bulletin_board_app",
+  "version": "1.0.0",
+  "description": "postgres assignment",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon app.js"
+  },
+  "author": "Bere Barcena",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "ejs": "^2.6.1",
+    "express": "^4.16.3",
+    "pg": "^7.4.3"
+  }
+}
