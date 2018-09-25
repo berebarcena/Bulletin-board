@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const { Client } = require('pg');
+const Sequelize = require('sequelize');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -11,53 +11,38 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
 //db config
-const client = new Client({
+const sequelize = new Sequelize({
   database: 'bulletinboard',
-  host: 'localhost',
-  user: process.env.POSTGRES_USER,
+  username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
-  port: 5432,
+  dialect: 'postgres',
+  define: {
+    timestamps: false, // true by default
+  },
 });
 
-client.connect();
+//defining the model
+const Message = sequelize.define('messages', {
+  title: Sequelize.STRING,
+  body: Sequelize.TEXT,
+});
 
 app.get('/', (req, res) => {
   res.render('add_msg');
 });
 
 app.get('/all-messages', (req, res) => {
-  client.query('select * from messages', (err, qRes) => {
-    if (err) {
-      console.log(err);
-      return err.stack;
-    }
-    res.render('all_msgs', { posts: qRes.rows });
+  Message.findAll().then(messages => {
+    res.render('all_msgs', { posts: messages });
   });
 });
 
 app.post('/all-messages', (req, res) => {
-  console.log('post');
   const title = req.body.title;
   const msg = req.body.message;
-  client.query(
-    `insert into messages(title, body) values('${title}', '${msg}')`,
-    err => {
-      if (err) {
-        console.log(err);
-        return err.stack;
-      }
-      console.log('message added to the database');
-
-      client.query('select * from messages', (err, qRes) => {
-        if (err) {
-          console.log(err);
-          return err.stack;
-        }
-        //client.end();
-        res.render('all_msgs', { posts: qRes.rows });
-      });
-    }
-  );
+  Message.create({ title: title, body: msg }).then(() => {
+    res.redirect('/all-messages');
+  });
 });
 
 app.listen(3000, function(err) {
